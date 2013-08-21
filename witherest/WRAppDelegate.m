@@ -7,16 +7,40 @@
 //
 
 #import "WRAppDelegate.h"
+#import <WindowsAzureMobileServices/WindowsAzureMobileServices.h>
 
 @implementation WRAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    // Override point for customization after application launch.
-    self.window.backgroundColor = [UIColor whiteColor];
+    self.window = [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
+    self.mobileSvc = [WRMobileService getInstance];
+    
+    self.mobileSvc.client = [self.mobileSvc.client clientWithFilter:self.mobileSvc];
+    
+    self.mobileSvc.keychainName = @"keychain";
+    
+    [self.mobileSvc loadAuthInfo];
+    
+    UIStoryboard *storyboard;
+    if (self.mobileSvc.client.currentUser.userId) {
+        storyboard = [UIStoryboard storyboardWithName:@"WRMainViewStoryboard" bundle:nil];
+        NSLog(@"logged");   
+    }else{
+        storyboard = [UIStoryboard storyboardWithName:@"WRLoginStoryBoard" bundle:nil];
+        NSLog(@"not_logged");
+    }
+    
+    UIViewController *viewController = [storyboard instantiateInitialViewController];
+    self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
     return YES;
+}
+
+-(void) changeRootViewController:(UIViewController *)controller
+{
+    self.window.rootViewController = controller;
+    [self.window makeKeyAndVisible];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
